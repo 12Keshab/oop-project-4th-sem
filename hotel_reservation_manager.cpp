@@ -404,7 +404,7 @@ class HotelManager{
         }
         else{
             for (Reservation& r : reservations){
-                r.getReservationID();
+                r.displayReservation();
             }
         }
     }
