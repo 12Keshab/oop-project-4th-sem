@@ -2,8 +2,8 @@
 #define HOTELMANAGER_H
 
 #include <vector>
-#include "Room.h"
-#include "Reservation.h"
+#include "room.h"
+#include "reservation.h"
 
 using namespace std;
 
