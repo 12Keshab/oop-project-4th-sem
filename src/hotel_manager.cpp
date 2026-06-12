@@ -1,6 +1,7 @@
 #include "hotel_manager.h"
 #include "exception.h"
 
+#include <ctime>
 #include <fstream>
 #include <iostream>
 
@@ -105,7 +106,70 @@ void HotelManager::showAvailableRooms() {
 
 // ================= BOOK ROOM =================
 
+bool isPastDate(string date)
+{
+    if (date.length() != 10)
+        return true;
+
+    if (date[4] != '-' || date[7] != '-')
+        return true;
+
+    try
+    {
+        int year = stoi(date.substr(0, 4));
+        int month = stoi(date.substr(5, 2));
+        int day = stoi(date.substr(8, 2));
+
+        if (month < 1 || month > 12)
+            return true;
+
+        int maxDays;
+
+        switch(month)
+        {
+            case 2:
+                maxDays = 29;
+                break;
+            case 4:
+            case 6:
+            case 9:
+            case 11:
+                maxDays = 30;
+                break;
+            default:
+                maxDays = 31;
+        }
+
+        if(day < 1 || day > maxDays)
+            return true;
+
+        time_t now = time(0);
+        tm* current = localtime(&now);
+
+        int currentYear = current->tm_year + 1900;
+        int currentMonth = current->tm_mon + 1;
+        int currentDay = current->tm_mday;
+
+        if(year < currentYear)
+            return true;
+
+        if(year == currentYear && month < currentMonth)
+            return true;
+
+        if(year == currentYear &&
+           month == currentMonth &&
+           day < currentDay)
+            return true;
+
+        return false;
+    }
+    catch(...)
+    {
+        return true;
+    }
+}
 void HotelManager::bookRoom() {
+
 
     int roomNumber;
     string name;
@@ -116,12 +180,14 @@ void HotelManager::bookRoom() {
     cout << "\nEnter Room Number: ";
 
     if (!(cin >> roomNumber)) {
+
         cin.clear();
         cin.ignore(1000, '\n');
+
         throw InvalidInputException();
     }
 
-    cin.ignore();
+    cin.ignore(1000, '\n');
 
     cout << "Enter Guest Name: ";
     getline(cin, name);
@@ -129,11 +195,27 @@ void HotelManager::bookRoom() {
     cout << "Enter Guest Email: ";
     getline(cin, email);
 
-    cout << "Enter Check In Date: ";
+    cout << "Enter Check In Date (YYYY-MM-DD): ";
     getline(cin, checkIn);
 
-    cout << "Enter Check Out Date: ";
+    cout << "Enter Check Out Date (YYYY-MM-DD): ";
     getline(cin, checkOut);
+
+    //Check check-in 
+    if (isPastDate(checkIn)) {
+
+        cout << "\nInvalid date or check-in date is in the past!\n";
+        cout << "Please use YYYY-MM-DD format.\n";
+        return;
+    }
+
+    // Check if check-out is after check-in
+    if (checkOut <= checkIn) {
+
+        cout << "\nCheck-out date must be after check-in date!\n";
+        cout << "Please use YYYY-MM-DD format.\n";
+        return;
+    }
 
     try {
 
@@ -164,18 +246,22 @@ void HotelManager::bookRoom() {
                 saveData();
 
                 cout << "\nRoom booked successfully!\n";
-                cout << "Reservation ID: " << reservationID << endl;
+                cout << "Reservation ID: "
+                     << reservationID
+                     << endl;
 
                 return;
             }
         }
 
         cout << "\nRoom not found!\n";
-
     }
+
     catch (RoomNotAvailableException& e) {
 
-        cout << "\n" << e.what() << endl;
+        cout << "\n"
+             << e.what()
+             << endl;
     }
 }
 
